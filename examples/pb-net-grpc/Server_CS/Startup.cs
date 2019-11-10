@@ -1,3 +1,6 @@
+using System.Security.Claims;
+using System.Threading.Tasks;
+using idunno.Authentication.Basic;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +14,33 @@ namespace Server_CS
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(BasicAuthenticationDefaults.AuthenticationScheme)
+                .AddBasic(options =>
+                {
+                    options.AllowInsecureProtocol = true;
+                    options.Realm = "idunno";
+                    options.Events = new BasicAuthenticationEvents
+                    {
+                        OnValidateCredentials = context =>
+                        {
+                            if (context.Username == context.Password)
+                            {
+                                var claims = new[]
+                                {
+                                    new Claim(ClaimTypes.NameIdentifier, context.Username, ClaimValueTypes.String, context.Options.ClaimsIssuer),
+                                    new Claim(ClaimTypes.Name, context.Username, ClaimValueTypes.String, context.Options.ClaimsIssuer),
+                                };
+
+                                context.Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, context.Scheme.Name));
+                                context.Success();
+                            }
+                            return Task.CompletedTask;
+                        }
+                    };
+                });
+
+            services.AddAuthorization();
+
             services.AddCodeFirstGrpc(config =>
             {
                 config.ResponseCompressionLevel = System.IO.Compression.CompressionLevel.Optimal;
@@ -21,6 +51,9 @@ namespace Server_CS
         public void Configure(IApplicationBuilder app, IWebHostEnvironment _)
         {
             app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using ProtoBuf.Grpc.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ProtoBuf.Grpc.Server
 {
@@ -61,7 +62,13 @@ namespace ProtoBuf.Grpc.Server
                 metadata.AddRange(typeof(TService).GetCustomAttributes(inherit: true));
                 // Add method metadata last so it has a higher priority
                 metadata.AddRange(stub.Method.GetCustomAttributes(inherit: true));
-                
+
+                var implementedMethod = typeof(TService).GetMethod(stub.Method.Name, stub.Method.GetParameters()
+                    .Select(s => s.ParameterType)
+                    .ToArray());
+
+                if (implementedMethod != null) metadata.AddRange(implementedMethod.GetCustomAttributes(inherit: true));
+
                 var context = (ServiceMethodProviderContext<TService>)state;
                 switch (method.Type)
                 {

@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Condition="'$(ExampleRefs)'=='local'" Include="..\..\..\src\protobuf-net.Grpc.AspNetCore\protobuf-net.Grpc.AspNetCore.csproj" />
     <PackageReference Condition="'$(ExampleRefs)'=='nuget'" Include="protobuf-net.Grpc.AspNetCore" Version="$(PBGRPCLibVersion)" />
+    <PackageReference Include="idunno.Authentication.Basic" Version="2.1.1" />
     
     <ProjectReference Include="..\Shared_CS\Shared_CS.csproj" />
   </ItemGroup>
